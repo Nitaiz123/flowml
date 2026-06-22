@@ -2,9 +2,16 @@
 
 > Build, deploy, and monitor ML pipelines without the Kubeflow complexity.
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-00e5ff?style=for-the-badge&logo=github)](https://nitaiz123.github.io/flowml/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-cyan.svg)](LICENSE)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://python.org)
 [![Kubernetes](https://img.shields.io/badge/kubernetes-1.26+-blue.svg)](https://kubernetes.io)
+
+## 🌐 Live Demo
+
+**[https://nitaiz123.github.io/flowml/](https://nitaiz123.github.io/flowml/)**
+
+Try the visual pipeline builder in your browser — drag-and-drop nodes, connect them, run pipelines, and export Kubernetes manifests or Helm charts. No setup required.
 
 ---
 
