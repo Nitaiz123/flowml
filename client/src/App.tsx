@@ -8,6 +8,11 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import PipelineBuilder from "./pages/PipelineBuilder";
 
+// Redirect bare URL (no hash) to hash-based routing
+if (typeof window !== 'undefined' && !window.location.hash) {
+  window.location.replace(window.location.href.replace(/\/?$/, '') + '/#/');
+}
+
 function AppRoutes() {
   return (
     <Switch>
