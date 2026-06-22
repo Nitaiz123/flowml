@@ -1,0 +1,198 @@
+# FlowML — Kubernetes Deployment Manifests
+# Apply with: kubectl apply -f deploy/kubernetes/
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ml-models
+  labels:
+    app.kubernetes.io/managed-by: flowml
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flowml-model-server
+  namespace: ml-models
+  labels:
+    app: flowml-model-server
+    version: v1
+    managed-by: flowml
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: flowml-model-server
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: flowml-model-server
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: flowml-sa
+      containers:
+        - name: model-server
+          image: docker.io/your-org/flowml-model:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+            - name: metrics
+              containerPort: 9090
+              protocol: TCP
+          env:
+            - name: MODEL_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: flowml-config
+                  key: model_name
+            - name: LOG_LEVEL
+              value: "info"
+            - name: METRICS_PORT
+              value: "9090"
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "2"
+              memory: "4Gi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            successThreshold: 1
+          volumeMounts:
+            - name: model-storage
+              mountPath: /models
+      volumes:
+        - name: model-storage
+          persistentVolumeClaim:
+            claimName: flowml-model-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flowml-model-svc
+  namespace: ml-models
+  labels:
+    app: flowml-model-server
+spec:
+  selector:
+    app: flowml-model-server
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+      protocol: TCP
+    - name: metrics
+      port: 9090
+      targetPort: 9090
+      protocol: TCP
+  type: ClusterIP
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: flowml-hpa
+  namespace: ml-models
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: flowml-model-server
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: flowml-config
+  namespace: ml-models
+data:
+  model_name: "flowml-model"
+  model_version: "1.0.0"
+  batch_size: "32"
+  max_concurrent_requests: "100"
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: flowml-sa
+  namespace: ml-models
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: flowml-model-pvc
+  namespace: ml-models
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+# Canary Deployment — uncomment to enable canary strategy
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: flowml-model-server-canary
+#   namespace: ml-models
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: flowml-model-server
+#       track: canary
+#   template:
+#     metadata:
+#       labels:
+#         app: flowml-model-server
+#         track: canary
+#         version: v2
+#     spec:
+#       containers:
+#         - name: model-server
+#           image: docker.io/your-org/flowml-model:v2-canary

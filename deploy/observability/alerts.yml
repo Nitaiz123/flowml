@@ -1,0 +1,67 @@
+# FlowML — Prometheus Alerting Rules
+
+groups:
+  - name: flowml.model.performance
+    rules:
+      - alert: HighModelLatency
+        expr: histogram_quantile(0.99, rate(flowml_request_duration_seconds_bucket[5m])) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High P99 latency on {{ $labels.model_name }}"
+          description: "P99 latency is {{ $value }}s (threshold: 500ms)"
+
+      - alert: HighErrorRate
+        expr: rate(flowml_requests_total{status="error"}[5m]) / rate(flowml_requests_total[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High error rate on {{ $labels.model_name }}"
+          description: "Error rate is {{ $value | humanizePercentage }}"
+
+      - alert: ModelDriftDetected
+        expr: flowml_data_drift_score > 0.1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Data drift detected on {{ $labels.model_name }}"
+          description: "Drift score {{ $value }} exceeds threshold 0.1"
+
+      - alert: LowThroughput
+        expr: rate(flowml_requests_total[5m]) < 10
+        for: 15m
+        labels:
+          severity: info
+        annotations:
+          summary: "Low throughput on {{ $labels.model_name }}"
+          description: "Throughput is {{ $value }} req/s"
+
+  - name: flowml.infrastructure
+    rules:
+      - alert: PodCrashLooping
+        expr: rate(kube_pod_container_status_restarts_total{namespace="ml-models"}[15m]) > 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Pod crash looping: {{ $labels.pod }}"
+
+      - alert: HighCPUUsage
+        expr: container_cpu_usage_seconds_total{namespace="ml-models"} > 0.9
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage on {{ $labels.pod }}"
+
+      - alert: HighMemoryUsage
+        expr: container_memory_usage_bytes{namespace="ml-models"} / container_spec_memory_limit_bytes > 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage on {{ $labels.pod }}"
+          description: "Memory usage is {{ $value | humanizePercentage }}"
