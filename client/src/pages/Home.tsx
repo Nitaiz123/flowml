@@ -62,7 +62,10 @@ export default function Home() {
             <span style={{ fontWeight: 700, fontSize: 16, letterSpacing: '-0.02em' }}>FlowML</span>
           </div>
           <nav style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
-            <a href="#features" style={{ fontSize: 14, color: '#6B6B6B', textDecoration: 'none', fontWeight: 500 }}>Features</a>
+            <button
+              onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+              style={{ fontSize: 14, color: '#6B6B6B', textDecoration: 'none', fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+            >Features</button>
             <button
               onClick={() => navigate('/builder')}
               style={{ fontSize: 14, fontWeight: 600, background: '#0A0A0A', color: '#FFFFFF', border: 'none', padding: '8px 18px', borderRadius: 4, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
