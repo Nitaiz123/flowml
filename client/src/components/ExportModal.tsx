@@ -1,6 +1,6 @@
 /**
  * ExportModal — Export pipeline as YAML, K8s manifest, Docker Compose, or CLI command
- * Blueprint Engineering Theme
+ * Editorial Precision Theme: white, black, minimal
  */
 import { useState } from 'react';
 import { X, Copy, Download, FileText, Package, Code2, Terminal, CheckCircle } from 'lucide-react';
@@ -38,20 +38,15 @@ version: "3.9"
 services:
   model-server:
     image: your-org/${pipelineName}:latest
-    build:
-      context: .
-      dockerfile: Dockerfile
     ports:
       - "8080:8080"
       - "9090:9090"
     environment:
       - MODEL_NAME=${pipelineName}
       - LOG_LEVEL=info
-      - METRICS_PORT=9090
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
-      timeout: 10s
       retries: 3
     restart: unless-stopped
 
@@ -59,83 +54,41 @@ services:
     image: prom/prometheus:latest
     ports:
       - "9091:9090"
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.retention.time=7d'
 
   grafana:
     image: grafana/grafana:latest
     ports:
       - "3001:3000"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=flowml
-    volumes:
-      - grafana-data:/var/lib/grafana
     depends_on:
       - prometheus
-
-volumes:
-  grafana-data:
 `;
 
   const cliCommands = `# FlowML CLI — ${pipelineName}
 # Install: pip install flowml-cli
 
-# ── Initialize ────────────────────────────────────────────────────────────────
 flowml init ${pipelineName}
 cd ${pipelineName}
 
-# ── Run locally ───────────────────────────────────────────────────────────────
+# Run locally
 flowml run pipeline.yaml
 
-# Run with custom config
-flowml run pipeline.yaml \\
-  --env production \\
-  --log-level debug \\
-  --output ./artifacts
+# Build Docker image
+flowml build --name ${pipelineName} --tag v1.0.0 --push
 
-# ── Build Docker image ────────────────────────────────────────────────────────
-flowml build \\
-  --name ${pipelineName} \\
-  --tag v1.0.0 \\
-  --push
-
-# ── Deploy to Kubernetes ──────────────────────────────────────────────────────
+# Deploy to Kubernetes
 flowml deploy \\
   --cluster my-k8s-cluster \\
   --namespace ml-models \\
   --strategy rolling \\
   --replicas 3
 
-# Canary deployment (10% traffic)
-flowml deploy \\
-  --strategy canary \\
-  --canary-weight 10 \\
-  --namespace ml-models
-
-# Blue/green deployment
-flowml deploy \\
-  --strategy blue-green \\
-  --namespace ml-models
-
-# ── Monitor ───────────────────────────────────────────────────────────────────
+# Monitor
 flowml status ${pipelineName}
 flowml logs ${pipelineName} --follow
 flowml metrics ${pipelineName} --window 1h
 
-# ── Rollback ──────────────────────────────────────────────────────────────────
+# Rollback
 flowml rollback ${pipelineName} --to v0.9.0
-
-# ── Scale ─────────────────────────────────────────────────────────────────────
-flowml scale ${pipelineName} --replicas 5
-
-# ── Drift detection ───────────────────────────────────────────────────────────
-flowml drift check ${pipelineName} \\
-  --reference ./data/reference.parquet \\
-  --current ./data/current.parquet \\
-  --threshold 0.1
 `;
 
   const content: Record<Tab, string> = {
@@ -182,63 +135,91 @@ flowml drift check ${pipelineName} \\
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
           {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+          <div
+            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }}
+            onClick={onClose}
+          />
 
           {/* Modal */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 8 }}
+            initial={{ opacity: 0, scale: 0.97, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 8 }}
-            transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
-            className="relative w-[800px] max-h-[80vh] flex flex-col rounded-xl
-              bg-[#0d1220] border border-white/10 shadow-2xl overflow-hidden"
+            exit={{ opacity: 0, scale: 0.97, y: 8 }}
+            transition={{ duration: 0.18, ease: [0.23, 1, 0.32, 1] }}
+            style={{
+              position: 'relative',
+              width: 800,
+              maxHeight: '80vh',
+              display: 'flex',
+              flexDirection: 'column',
+              borderRadius: 4,
+              background: '#FFFFFF',
+              border: '1px solid #E5E5E5',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
+              overflow: 'hidden',
+            }}
           >
             {/* Header */}
-            <div className="flex items-center gap-3 px-5 py-3 border-b border-white/8">
-              <Download size={14} className="text-cyan-400" />
-              <span className="text-sm font-mono font-semibold text-slate-200">Export Pipeline</span>
-              <span className="text-xs font-mono text-slate-600">{pipelineName}</span>
-              <div className="flex-1" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderBottom: '1px solid #E5E5E5', flexShrink: 0 }}>
+              <Download size={13} color="#E8000D" />
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#0A0A0A' }}>Export Pipeline</span>
+              <span style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: '#A3A3A3' }}>{pipelineName}</span>
+              <div style={{ flex: 1 }} />
               <button
                 onClick={copyContent}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-mono
-                  text-slate-400 hover:text-slate-200 border border-white/8 hover:border-white/15
-                  hover:bg-white/5 transition-all"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 5,
+                  padding: '4px 10px', borderRadius: 3, fontSize: 12,
+                  background: '#FFFFFF', border: '1px solid #E5E5E5',
+                  color: '#0A0A0A', cursor: 'pointer',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#F9F9F9')}
+                onMouseLeave={e => (e.currentTarget.style.background = '#FFFFFF')}
               >
-                {copied ? <CheckCircle size={11} className="text-emerald-400" /> : <Copy size={11} />}
+                {copied ? <CheckCircle size={11} color="#059669" /> : <Copy size={11} />}
                 {copied ? 'Copied!' : 'Copy'}
               </button>
               <button
                 onClick={downloadContent}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-mono
-                  bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/25
-                  transition-all"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 5,
+                  padding: '4px 10px', borderRadius: 3, fontSize: 12,
+                  background: '#E8000D', border: '1px solid #E8000D',
+                  color: '#FFFFFF', cursor: 'pointer', fontWeight: 600,
+                }}
               >
                 <Download size={11} />
                 Download
               </button>
               <button
                 onClick={onClose}
-                className="p-1 rounded text-slate-600 hover:text-slate-300 hover:bg-white/5 transition-all"
+                style={{ padding: 5, borderRadius: 3, background: 'transparent', border: 'none', cursor: 'pointer', color: '#6B6B6B', display: 'flex' }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#F4F4F4')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
                 <X size={14} />
               </button>
             </div>
 
             {/* Tabs */}
-            <div className="flex items-center gap-0.5 px-4 pt-2 border-b border-white/8">
+            <div style={{ display: 'flex', alignItems: 'center', padding: '0 16px', borderBottom: '1px solid #E5E5E5', flexShrink: 0 }}>
               {TABS.map(tab => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-t text-xs font-mono transition-all
-                    ${activeTab === tab.id
-                      ? 'text-cyan-400 bg-cyan-500/10 border-b-2 border-cyan-500'
-                      : 'text-slate-500 hover:text-slate-300'
-                    }`}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 5,
+                    padding: '8px 12px', fontSize: 12, cursor: 'pointer',
+                    background: 'transparent', border: 'none',
+                    borderBottom: activeTab === tab.id ? '2px solid #E8000D' : '2px solid transparent',
+                    color: activeTab === tab.id ? '#0A0A0A' : '#6B6B6B',
+                    fontWeight: activeTab === tab.id ? 600 : 400,
+                    transition: 'color 120ms',
+                    fontFamily: "'Inter', sans-serif",
+                  }}
                 >
                   <tab.icon size={11} />
                   {tab.label}
@@ -247,8 +228,16 @@ flowml drift check ${pipelineName} \\
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-auto">
-              <pre className="p-4 text-xs font-mono text-slate-300 leading-relaxed whitespace-pre-wrap">
+            <div style={{ flex: 1, overflow: 'auto', background: '#FAFAFA' }}>
+              <pre style={{
+                padding: 16,
+                fontSize: 12,
+                fontFamily: "'JetBrains Mono', monospace",
+                color: '#0A0A0A',
+                lineHeight: 1.7,
+                whiteSpace: 'pre-wrap',
+                margin: 0,
+              }}>
                 {content[activeTab]}
               </pre>
             </div>

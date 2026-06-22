@@ -1,6 +1,6 @@
 /**
  * PipelineNode — Custom React Flow node component
- * Blueprint Engineering Theme — electric cyan, dark navy
+ * Editorial Precision Theme: white, black, category color accents
  */
 
 import { Handle, Position, type NodeProps } from '@xyflow/react';
@@ -9,10 +9,10 @@ import {
   FileSpreadsheet, Globe, Grid3x3, Rocket, Scissors, SlidersHorizontal,
   Type, Wrench, CheckCircle2, XCircle, Loader2, Clock, AlertCircle
 } from 'lucide-react';
-import type { PipelineNodeData, NodeCategory } from '@/lib/pipelineStore';
+import type { PipelineNodeData } from '@/lib/pipelineStore';
 import { NODE_CATEGORIES } from '@/lib/pipelineStore';
 
-const ICONS: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
+const ICONS: Record<string, React.ComponentType<{ size?: number; className?: string; color?: string }>> = {
   FileSpreadsheet, Database, Globe, Cloud, Wrench, Scissors, Type,
   BrainCircuit, Cpu, SlidersHorizontal, BarChart3, Grid3x3,
   Archive, Rocket, Box, Code2,
@@ -21,107 +21,108 @@ const ICONS: Record<string, React.ComponentType<{ size?: number; className?: str
 function StatusBadge({ status }: { status: PipelineNodeData['status'] }) {
   switch (status) {
     case 'running':
-      return <Loader2 size={13} className="animate-spin text-cyan-400" />;
+      return <Loader2 size={12} className="animate-spin" color="#E8000D" />;
     case 'success':
-      return <CheckCircle2 size={13} className="text-emerald-400" />;
+      return <CheckCircle2 size={12} color="#059669" />;
     case 'error':
-      return <XCircle size={13} className="text-red-400" />;
+      return <XCircle size={12} color="#DC2626" />;
     case 'skipped':
-      return <AlertCircle size={13} className="text-yellow-400" />;
+      return <AlertCircle size={12} color="#D97706" />;
     default:
-      return <Clock size={13} className="text-slate-500" />;
+      return <Clock size={12} color="#A3A3A3" />;
   }
 }
-
-const CATEGORY_STYLES: Record<NodeCategory, { border: string; headerBg: string; iconBg: string; iconColor: string }> = {
-  data: {
-    border: 'border-blue-500/40',
-    headerBg: 'bg-blue-500/10',
-    iconBg: 'bg-blue-500/20',
-    iconColor: 'text-blue-400',
-  },
-  transform: {
-    border: 'border-cyan-500/40',
-    headerBg: 'bg-cyan-500/10',
-    iconBg: 'bg-cyan-500/20',
-    iconColor: 'text-cyan-400',
-  },
-  train: {
-    border: 'border-violet-500/40',
-    headerBg: 'bg-violet-500/10',
-    iconBg: 'bg-violet-500/20',
-    iconColor: 'text-violet-400',
-  },
-  evaluate: {
-    border: 'border-amber-500/40',
-    headerBg: 'bg-amber-500/10',
-    iconBg: 'bg-amber-500/20',
-    iconColor: 'text-amber-400',
-  },
-  deploy: {
-    border: 'border-emerald-500/40',
-    headerBg: 'bg-emerald-500/10',
-    iconBg: 'bg-emerald-500/20',
-    iconColor: 'text-emerald-400',
-  },
-  custom: {
-    border: 'border-slate-500/40',
-    headerBg: 'bg-slate-500/10',
-    iconBg: 'bg-slate-500/20',
-    iconColor: 'text-slate-400',
-  },
-};
 
 export default function PipelineNode({ data, selected }: NodeProps) {
   const nodeData = data as unknown as PipelineNodeData;
   const { label, category, icon, status, description, outputs, duration } = nodeData;
-  const styles = CATEGORY_STYLES[category] || CATEGORY_STYLES.custom;
   const IconComponent = ICONS[icon] || Code2;
   const catInfo = NODE_CATEGORIES[category];
+  const catColor = catInfo.color;
 
   const isRunning = status === 'running';
-  const selectedClass = selected ? 'ring-1 ring-cyan-400/60 shadow-[0_0_16px_rgba(0,212,255,0.2)]' : '';
-  const runningClass = isRunning ? 'node-running' : '';
 
   return (
     <div
-      className={`
-        relative w-52 rounded-lg border bg-[#0d1526] transition-all duration-200
-        ${styles.border} ${selectedClass} ${runningClass}
-        hover:border-opacity-70 hover:shadow-lg
-      `}
-      style={{ minWidth: 208 }}
+      style={{
+        width: 200,
+        background: '#FFFFFF',
+        border: selected ? `1.5px solid #E8000D` : `1px solid #E5E5E5`,
+        borderRadius: 4,
+        boxShadow: selected ? '0 0 0 3px rgba(232,0,13,0.08)' : 'none',
+        transition: 'border-color 150ms, box-shadow 150ms',
+        outline: isRunning ? `1px solid ${catColor}` : 'none',
+      }}
     >
       {/* Input handle */}
       <Handle
         type="target"
         position={Position.Left}
-        className="!-left-[6px]"
+        style={{ background: '#FFFFFF', border: `1.5px solid ${catColor}`, width: 8, height: 8 }}
       />
 
+      {/* Category top bar */}
+      <div style={{
+        height: 3,
+        background: catColor,
+        borderRadius: '3px 3px 0 0',
+      }} />
+
       {/* Header */}
-      <div className={`flex items-center gap-2 px-3 py-2.5 rounded-t-lg ${styles.headerBg} border-b ${styles.border}`}>
-        <div className={`flex items-center justify-center w-7 h-7 rounded-md ${styles.iconBg}`}>
-          <IconComponent size={14} className={styles.iconColor} />
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        padding: '8px 10px 6px',
+        borderBottom: '1px solid #F4F4F4',
+      }}>
+        <div style={{
+          width: 26,
+          height: 26,
+          borderRadius: 3,
+          background: catColor + '14',
+          border: `1px solid ${catColor}30`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+        }}>
+          <IconComponent size={13} color={catColor} />
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="text-xs font-semibold text-slate-100 truncate font-mono">{label}</div>
-          <div className="text-[10px] text-slate-500 truncate">{catInfo.label}</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{
+            fontSize: 12,
+            fontWeight: 600,
+            color: '#0A0A0A',
+            fontFamily: "'JetBrains Mono', monospace",
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            letterSpacing: '-0.01em',
+          }}>{label}</div>
+          <div style={{
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: '0.06em',
+            textTransform: 'uppercase',
+            color: catColor,
+            marginTop: 1,
+          }}>{catInfo.label}</div>
         </div>
         <StatusBadge status={status} />
       </div>
 
       {/* Body */}
-      <div className="px-3 py-2">
-        <p className="text-[10px] text-slate-500 leading-relaxed">{description}</p>
+      <div style={{ padding: '6px 10px 8px' }}>
+        <p style={{ fontSize: 10, color: '#6B6B6B', lineHeight: 1.5, margin: 0 }}>{description}</p>
 
         {/* Outputs */}
         {outputs && Object.keys(outputs).length > 0 && (
-          <div className="mt-2 space-y-1">
+          <div style={{ marginTop: 6, borderTop: '1px solid #F4F4F4', paddingTop: 5 }}>
             {Object.entries(outputs).map(([key, val]) => (
-              <div key={key} className="flex items-center justify-between">
-                <span className="text-[10px] text-slate-500 capitalize">{key}</span>
-                <span className="text-[10px] font-mono text-cyan-400 truncate max-w-[100px]">{val}</span>
+              <div key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 2 }}>
+                <span style={{ fontSize: 10, color: '#A3A3A3', textTransform: 'capitalize' }}>{key}</span>
+                <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: catColor, maxWidth: 90, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{val}</span>
               </div>
             ))}
           </div>
@@ -129,15 +130,17 @@ export default function PipelineNode({ data, selected }: NodeProps) {
 
         {/* Duration */}
         {duration && (
-          <div className="mt-1.5 flex items-center gap-1">
-            <Clock size={10} className="text-slate-600" />
-            <span className="text-[10px] text-slate-500 font-mono">{duration}</span>
+          <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Clock size={9} color="#A3A3A3" />
+            <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: '#A3A3A3' }}>{duration}</span>
           </div>
         )}
 
         {/* Error */}
         {status === 'error' && nodeData.error && (
-          <div className="mt-1.5 text-[10px] text-red-400 font-mono truncate">{nodeData.error}</div>
+          <div style={{ marginTop: 4, fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: '#DC2626', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {nodeData.error}
+          </div>
         )}
       </div>
 
@@ -145,7 +148,7 @@ export default function PipelineNode({ data, selected }: NodeProps) {
       <Handle
         type="source"
         position={Position.Right}
-        className="!-right-[6px]"
+        style={{ background: '#FFFFFF', border: `1.5px solid ${catColor}`, width: 8, height: 8 }}
       />
     </div>
   );

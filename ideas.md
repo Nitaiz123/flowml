@@ -1,4 +1,44 @@
-# ML Pipeline Builder — Design Ideas
+# FlowML Redesign — TechCrunch Style
+
+## Reference
+TechCrunch (techcrunch.com): white background, black text, tight editorial grid, small red accent, no gradients, no dark mode, clean sans-serif, generous whitespace, content-first.
+
+## Chosen Approach: Editorial Precision
+
+**Design Movement:** Swiss/International Typographic Style meets modern SaaS editorial (TechCrunch, Linear, Vercel docs)
+
+**Core Principles:**
+1. White canvas — #FFFFFF background everywhere, no dark panels
+2. Black ink — #0A0A0A primary text, near-black for headings
+3. One accent — #E8000D (TechCrunch red) used sparingly for CTAs and active states only
+4. Borders over shadows — 1px solid #E5E5E5 dividers, no box-shadows
+
+**Color Philosophy:**
+- Background: #FFFFFF
+- Surface: #F9F9F9 (very light gray for cards/panels)
+- Border: #E5E5E5
+- Text primary: #0A0A0A
+- Text secondary: #6B6B6B
+- Accent: #E8000D (red — used only for primary CTA, active node borders, run button)
+- Code/mono: #1A1A1A on #F4F4F4
+
+**Layout Paradigm:**
+- Horizontal rule-based sections (like newspaper columns)
+- Left-aligned headlines, never centered
+- Pipeline builder: white canvas with very light gray dot grid, clean colored node type tags
+
+**Typography System:**
+- Headings: "Inter" 700/800 weight, tight letter-spacing (-0.02em)
+- Body: "Inter" 400/500, 15px, line-height 1.6
+- Mono: "JetBrains Mono" for node names, code, logs
+
+**Brand Voice:** Direct, technical, zero fluff.
+
+**Signature Brand Color:** #E8000D (editorial red)
+
+---
+
+## OLD Design (replaced)
 
 ## Three Approaches
 

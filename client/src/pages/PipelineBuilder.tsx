@@ -1,7 +1,7 @@
 /**
- * PipelineBuilder — Production-grade ML pipeline canvas
- * Blueprint Engineering Theme — deep navy, electric cyan, dot-grid canvas
- * Features: drag-drop, K8s/Docker deploy, observability, YAML/JSON/K8s export
+ * PipelineBuilder — ML pipeline canvas
+ * Editorial Precision Theme: white, black, #E8000D accent
+ * Inter UI, JetBrains Mono for code/logs
  */
 import { useState, useCallback, useRef, useEffect } from 'react';
 import {
@@ -13,11 +13,11 @@ import '@xyflow/react/dist/style.css';
 import { nanoid } from 'nanoid';
 import {
   Play, Square, Trash2, LayoutTemplate, Save, Download,
-  Plus, Zap, GitBranch, Activity, Terminal,
+  GitBranch, Activity, Terminal,
   Eye, EyeOff, RefreshCw, CheckCircle, AlertTriangle,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useLocation } from 'wouter';
 
 import PipelineNode from '@/components/PipelineNode';
@@ -54,7 +54,6 @@ function createNode(type: string, position: { x: number; y: number }): Node {
   };
 }
 
-// Default pipeline nodes
 const DEFAULT_NODES: Node[] = [
   createNode('s3_loader', { x: 60, y: 200 }),
   createNode('feature_engineer', { x: 320, y: 200 }),
@@ -75,6 +74,21 @@ const DEFAULT_EDGES: Edge[] = DEFAULT_NODES.slice(0, -1).map((node, i) => ({
 type RunState = 'idle' | 'running' | 'done' | 'error';
 type ActivePanel = 'logs' | 'observability' | null;
 
+// ── Inline button styles ──────────────────────────────────────────────────────
+const btnBase: React.CSSProperties = {
+  display: 'inline-flex', alignItems: 'center', gap: 5,
+  padding: '5px 10px', borderRadius: 3, fontSize: 12, fontWeight: 500,
+  cursor: 'pointer', border: '1px solid #E5E5E5', background: '#FFFFFF',
+  color: '#0A0A0A', transition: 'background 120ms, border-color 120ms',
+  fontFamily: "'Inter', sans-serif",
+};
+const btnRed: React.CSSProperties = {
+  ...btnBase, background: '#E8000D', color: '#FFFFFF', border: '1px solid #E8000D', fontWeight: 600,
+};
+const btnStop: React.CSSProperties = {
+  ...btnBase, background: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA', fontWeight: 600,
+};
+
 export default function PipelineBuilder() {
   const [, navigate] = useLocation();
   const [nodes, setNodes, onNodesChange] = useNodesState(DEFAULT_NODES);
@@ -92,7 +106,6 @@ export default function PipelineBuilder() {
   const runRef = useRef(false);
   const dropRef = useRef<HTMLDivElement>(null);
 
-  // ── Connections ──────────────────────────────────────────────────────────────
   const onConnect = useCallback(
     (params: Connection) =>
       setEdges(eds => addEdge({ ...params, id: nanoid(6), type: 'smoothstep' }, eds)),
@@ -107,7 +120,6 @@ export default function PipelineBuilder() {
     setSelectedNode(null);
   }, []);
 
-  // ── Drag-drop from palette ───────────────────────────────────────────────────
   const onDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
@@ -136,7 +148,6 @@ export default function PipelineBuilder() {
     [rfInstance, setNodes]
   );
 
-  // ── Config update ────────────────────────────────────────────────────────────
   const updateNodeConfig = useCallback(
     (nodeId: string, config: Record<string, string | number | boolean | string[]>) => {
       setNodes(nds =>
@@ -149,7 +160,6 @@ export default function PipelineBuilder() {
     [setNodes]
   );
 
-  // ── Delete selected ──────────────────────────────────────────────────────────
   const deleteSelected = useCallback(() => {
     if (!selectedNode) return;
     setNodes(nds => nds.filter(n => n.id !== selectedNode.id));
@@ -158,7 +168,6 @@ export default function PipelineBuilder() {
     toast.info('Node removed');
   }, [selectedNode, setNodes, setEdges]);
 
-  // ── Keyboard shortcuts ───────────────────────────────────────────────────────
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.key === 'Delete' || e.key === 'Backspace') &&
@@ -172,7 +181,6 @@ export default function PipelineBuilder() {
     return () => window.removeEventListener('keydown', handler);
   }, [selectedNode, deleteSelected]);
 
-  // ── Logging helper ───────────────────────────────────────────────────────────
   const addLog = useCallback((msg: string, level: LogEntry['level'] = 'info', nodeId?: string, nodeName?: string) => {
     setLogs(prev => [...prev, {
       id: nanoid(6),
@@ -184,7 +192,6 @@ export default function PipelineBuilder() {
     }]);
   }, []);
 
-  // ── Run pipeline ─────────────────────────────────────────────────────────────
   const runPipeline = useCallback(async () => {
     if (nodes.length === 0) {
       toast.error('Add at least one node to run');
@@ -201,10 +208,8 @@ export default function PipelineBuilder() {
 
     const sorted = [...nodes].sort((a, b) => a.position.x - b.position.x);
 
-    addLog(`🚀 Starting pipeline "${pipelineName}"`, 'info');
-    addLog(`📋 ${sorted.length} steps queued`, 'info');
-    addLog(`🔧 Runtime: Docker container · Target: Kubernetes`, 'info');
-    addLog(`📡 Metrics: Prometheus scraping on :9090/metrics`, 'info');
+    addLog(`▶ Starting pipeline "${pipelineName}"`, 'info');
+    addLog(`  ${sorted.length} steps queued`, 'info');
 
     let hasError = false;
 
@@ -216,7 +221,7 @@ export default function PipelineBuilder() {
       setNodes(nds => nds.map(n =>
         n.id === node.id ? { ...n, data: { ...n.data, status: 'running' } } : n
       ));
-      addLog(`⚡ [${i + 1}/${sorted.length}] ${data.label}`, 'info', node.id, data.label);
+      addLog(`[${i + 1}/${sorted.length}] ${data.label}`, 'info', node.id, data.label);
 
       const duration = 800 + Math.random() * 2200;
       await new Promise(r => setTimeout(r, duration));
@@ -243,9 +248,9 @@ export default function PipelineBuilder() {
       ));
 
       if (success) {
-        addLog(`✅ ${data.label} completed in ${durationStr}`, 'success', node.id, data.label);
+        addLog(`✓ ${data.label} — ${durationStr}`, 'success', node.id, data.label);
       } else {
-        addLog(`❌ ${data.label} FAILED after ${durationStr}`, 'error', node.id, data.label);
+        addLog(`✗ ${data.label} FAILED — ${durationStr}`, 'error', node.id, data.label);
         hasError = true;
         break;
       }
@@ -254,12 +259,11 @@ export default function PipelineBuilder() {
     if (runRef.current) {
       if (hasError) {
         setRunState('error');
-        addLog('🛑 Pipeline failed — see error above', 'error');
+        addLog('Pipeline failed — see error above', 'error');
         toast.error('Pipeline failed');
       } else {
         setRunState('done');
-        addLog(`✅ Pipeline "${pipelineName}" completed — all ${sorted.length} steps passed`, 'success');
-        addLog(`📦 Artifact saved to: s3://flowml-artifacts/${pipelineName}/latest`, 'info');
+        addLog(`Pipeline "${pipelineName}" completed — ${sorted.length} steps`, 'success');
         toast.success('Pipeline completed!');
       }
     }
@@ -273,11 +277,10 @@ export default function PipelineBuilder() {
       const d = n.data as unknown as PipelineNodeData;
       return d.status === 'running' ? { ...n, data: { ...n.data, status: 'idle' } } : n;
     }));
-    addLog('🛑 Pipeline manually stopped', 'warn');
+    addLog('Pipeline manually stopped', 'warn');
     toast.info('Pipeline stopped');
   }, [setNodes, addLog]);
 
-  // ── Load template ─────────────────────────────────────────────────────────────
   const loadTemplate = useCallback((templateId: string) => {
     const template = PIPELINE_TEMPLATES.find(t => t.id === templateId);
     if (!template) return;
@@ -349,26 +352,6 @@ export default function PipelineBuilder() {
 name: ${pipelineName}
 version: "1.0.0"
 
-kubernetes:
-  namespace: ml-models
-  resources:
-    requests: { cpu: "500m", memory: "1Gi" }
-    limits: { cpu: "2", memory: "4Gi" }
-  autoscaling:
-    enabled: true
-    min_replicas: 2
-    max_replicas: 10
-
-docker:
-  registry: docker.io
-  base_image: python:3.11-slim
-  push: true
-
-observability:
-  prometheus: { enabled: true, port: 9090 }
-  grafana: { enabled: true }
-  drift_detection: { enabled: true, method: evidently, threshold: 0.1 }
-
 steps:
 ${steps.map(s => `  - id: ${s.id}
     name: "${s.name}"
@@ -387,70 +370,21 @@ kind: Deployment
 metadata:
   name: ${pipelineName}
   namespace: ml-models
-  labels:
-    app: ${pipelineName}
-    managed-by: flowml
 spec:
   replicas: 3
   selector:
     matchLabels:
       app: ${pipelineName}
-  strategy:
-    type: RollingUpdate
-    rollingUpdate: { maxSurge: 1, maxUnavailable: 0 }
   template:
     metadata:
       labels:
         app: ${pipelineName}
-      annotations:
-        prometheus.io/scrape: "true"
-        prometheus.io/port: "9090"
     spec:
       containers:
         - name: model-server
           image: docker.io/your-org/${pipelineName}:latest
           ports:
-            - { containerPort: 8080, name: http }
-            - { containerPort: 9090, name: metrics }
-          resources:
-            requests: { cpu: "500m", memory: "1Gi" }
-            limits: { cpu: "2", memory: "4Gi" }
-          livenessProbe:
-            httpGet: { path: /health, port: 8080 }
-            initialDelaySeconds: 30
-          readinessProbe:
-            httpGet: { path: /ready, port: 8080 }
-            initialDelaySeconds: 5
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: ${pipelineName}-svc
-  namespace: ml-models
-spec:
-  selector:
-    app: ${pipelineName}
-  ports:
-    - { name: http, port: 80, targetPort: 8080 }
-    - { name: metrics, port: 9090, targetPort: 9090 }
----
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
-metadata:
-  name: ${pipelineName}-hpa
-  namespace: ml-models
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: ${pipelineName}
-  minReplicas: 2
-  maxReplicas: 10
-  metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        target: { type: Utilization, averageUtilization: 70 }
+            - containerPort: 8080
 `, [pipelineName]);
 
   const fitView = useCallback(() => {
@@ -461,21 +395,22 @@ spec:
   const errorCount = nodes.filter(n => (n.data as unknown as PipelineNodeData).status === 'error').length;
 
   return (
-    <div className="flex flex-col h-screen bg-[#0a0f1e] overflow-hidden">
-      {/* ── Top Bar ─────────────────────────────────────────────────────────── */}
-      <header className="flex items-center gap-3 px-4 h-12 bg-[#0c1220] border-b border-white/8 flex-shrink-0 z-10">
-        <button onClick={() => navigate('/')} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-          <img
-            src="/manus-storage/flowml-logo_85227663.png"
-            alt="FlowML"
-            className="w-6 h-6 object-contain"
-            onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-          />
-          <span className="text-sm font-bold font-mono text-cyan-400 tracking-tight">FlowML</span>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#FFFFFF', overflow: 'hidden' }}>
+
+      {/* ── Top Bar ── */}
+      <header style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 16px', height: 48, background: '#FFFFFF', borderBottom: '1px solid #E5E5E5', flexShrink: 0, zIndex: 10 }}>
+        {/* Logo */}
+        <button
+          onClick={() => navigate('/')}
+          style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0' }}
+        >
+          <span style={{ width: 8, height: 8, background: '#E8000D', display: 'inline-block', borderRadius: 1 }} />
+          <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: '-0.02em', color: '#0A0A0A' }}>FlowML</span>
         </button>
 
-        <div className="w-px h-5 bg-white/10" />
+        <div style={{ width: 1, height: 18, background: '#E5E5E5', margin: '0 4px' }} />
 
+        {/* Pipeline name */}
         {editingName ? (
           <input
             autoFocus
@@ -483,115 +418,114 @@ spec:
             onChange={e => setPipelineName(e.target.value)}
             onBlur={() => setEditingName(false)}
             onKeyDown={e => e.key === 'Enter' && setEditingName(false)}
-            className="px-2 py-0.5 text-sm font-mono bg-white/5 border border-cyan-500/40
-              rounded text-slate-200 outline-none w-48"
+            style={{
+              padding: '3px 8px', fontSize: 13, fontFamily: "'JetBrains Mono', monospace",
+              background: '#F9F9F9', border: '1px solid #E5E5E5', borderRadius: 3,
+              color: '#0A0A0A', outline: 'none', width: 200,
+            }}
           />
         ) : (
           <button
             onClick={() => setEditingName(true)}
-            className="flex items-center gap-1.5 text-sm font-mono text-slate-300
-              hover:text-cyan-400 transition-colors group"
+            style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'none', border: 'none', cursor: 'pointer', padding: '3px 6px', borderRadius: 3 }}
+            onMouseEnter={e => (e.currentTarget.style.background = '#F9F9F9')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'none')}
           >
-            <GitBranch size={13} className="text-slate-600 group-hover:text-cyan-500" />
-            {pipelineName}
+            <GitBranch size={12} color="#6B6B6B" />
+            <span style={{ fontSize: 13, fontFamily: "'JetBrains Mono', monospace", color: '#0A0A0A' }}>{pipelineName}</span>
           </button>
         )}
 
-        <AnimatePresence>
-          {runState !== 'idle' && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className={`flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-mono
-                ${runState === 'running' ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30' :
-                  runState === 'done' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' :
-                  'bg-red-500/15 text-red-400 border border-red-500/30'}`}
-            >
-              {runState === 'running' && <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />}
-              {runState === 'done' && <CheckCircle size={10} />}
-              {runState === 'error' && <AlertTriangle size={10} />}
-              {runState === 'running'
-                ? `Running ${successCount}/${nodes.length}`
-                : runState === 'done'
-                ? `Done (${successCount} steps)`
-                : `Failed at step ${successCount + 1}`}
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Run state badge */}
+        {runState !== 'idle' && (
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 5,
+            padding: '2px 8px', borderRadius: 3, fontSize: 11,
+            fontFamily: "'JetBrains Mono', monospace",
+            background: runState === 'running' ? '#FFF7ED' : runState === 'done' ? '#F0FDF4' : '#FEF2F2',
+            color: runState === 'running' ? '#C2410C' : runState === 'done' ? '#15803D' : '#DC2626',
+            border: `1px solid ${runState === 'running' ? '#FED7AA' : runState === 'done' ? '#BBF7D0' : '#FECACA'}`,
+          }}>
+            {runState === 'running' && <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#F97316', display: 'inline-block', animation: 'pulse 1.5s infinite' }} />}
+            {runState === 'done' && <CheckCircle size={10} />}
+            {runState === 'error' && <AlertTriangle size={10} />}
+            {runState === 'running'
+              ? `Running ${successCount}/${nodes.length}`
+              : runState === 'done'
+              ? `Done (${successCount} steps)`
+              : `Failed at step ${successCount + 1}`}
+          </div>
+        )}
 
-        <div className="flex-1" />
+        <div style={{ flex: 1 }} />
 
-        <div className="flex items-center gap-1.5">
+        {/* Action buttons */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <button
             onClick={() => setShowMinimap(p => !p)}
             title="Toggle minimap"
-            className="p-1.5 rounded text-slate-500 hover:text-slate-300 hover:bg-white/5 transition-all"
+            style={{ ...btnBase, padding: '5px 7px' }}
+            onMouseEnter={e => (e.currentTarget.style.background = '#F9F9F9')}
+            onMouseLeave={e => (e.currentTarget.style.background = '#FFFFFF')}
           >
-            {showMinimap ? <EyeOff size={14} /> : <Eye size={14} />}
+            {showMinimap ? <EyeOff size={13} /> : <Eye size={13} />}
           </button>
           <button onClick={fitView} title="Fit view"
-            className="p-1.5 rounded text-slate-500 hover:text-slate-300 hover:bg-white/5 transition-all">
-            <RefreshCw size={14} />
+            style={{ ...btnBase, padding: '5px 7px' }}
+            onMouseEnter={e => (e.currentTarget.style.background = '#F9F9F9')}
+            onMouseLeave={e => (e.currentTarget.style.background = '#FFFFFF')}
+          >
+            <RefreshCw size={13} />
           </button>
           <button
             onClick={() => setShowTemplates(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-mono
-              text-slate-400 hover:text-slate-200 border border-white/8 hover:border-white/15
-              hover:bg-white/5 transition-all"
+            style={btnBase}
+            onMouseEnter={e => (e.currentTarget.style.background = '#F9F9F9')}
+            onMouseLeave={e => (e.currentTarget.style.background = '#FFFFFF')}
           >
             <LayoutTemplate size={12} />
             Templates
           </button>
           <button
             onClick={() => setShowExport(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-mono
-              text-slate-400 hover:text-slate-200 border border-white/8 hover:border-white/15
-              hover:bg-white/5 transition-all"
+            style={btnBase}
+            onMouseEnter={e => (e.currentTarget.style.background = '#F9F9F9')}
+            onMouseLeave={e => (e.currentTarget.style.background = '#FFFFFF')}
           >
             <Download size={12} />
             Export
           </button>
           <button
             onClick={savePipeline}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-mono
-              text-slate-400 hover:text-slate-200 border border-white/8 hover:border-white/15
-              hover:bg-white/5 transition-all"
+            style={btnBase}
+            onMouseEnter={e => (e.currentTarget.style.background = '#F9F9F9')}
+            onMouseLeave={e => (e.currentTarget.style.background = '#FFFFFF')}
           >
             <Save size={12} />
             Save
           </button>
-          <div className="w-px h-5 bg-white/10" />
+          <div style={{ width: 1, height: 18, background: '#E5E5E5', margin: '0 4px' }} />
           {runState === 'running' ? (
-            <button
-              onClick={stopPipeline}
-              className="flex items-center gap-1.5 px-3 py-1 rounded text-xs font-mono font-semibold
-                bg-red-500/20 text-red-400 border border-red-500/40 hover:bg-red-500/30 transition-all"
-            >
-              <Square size={11} className="fill-current" />
+            <button onClick={stopPipeline} style={btnStop}>
+              <Square size={11} />
               Stop
             </button>
           ) : (
-            <button
-              onClick={runPipeline}
-              className="flex items-center gap-1.5 px-3 py-1 rounded text-xs font-mono font-semibold
-                bg-cyan-500/20 text-cyan-400 border border-cyan-500/40
-                hover:bg-cyan-500/30 hover:shadow-[0_0_12px_rgba(0,212,255,0.3)] transition-all"
-            >
-              <Play size={11} className="fill-current" />
+            <button onClick={runPipeline} style={btnRed}>
+              <Play size={11} />
               Run Pipeline
             </button>
           )}
         </div>
       </header>
 
-      {/* ── Main Layout ─────────────────────────────────────────────────────── */}
-      <div className="flex flex-1 overflow-hidden">
+      {/* ── Main Layout ── */}
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         <NodePalette />
 
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
           {/* Canvas */}
-          <div className="flex-1 relative" ref={dropRef} onDragOver={onDragOver} onDrop={onDrop}>
+          <div style={{ flex: 1, position: 'relative' }} ref={dropRef} onDragOver={onDragOver} onDrop={onDrop}>
             <ReactFlow
               nodes={nodes}
               edges={edges}
@@ -608,44 +542,47 @@ spec:
               defaultEdgeOptions={{ type: 'smoothstep', animated: false }}
               proOptions={{ hideAttribution: true }}
             >
-              <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="rgba(100,116,139,0.25)" />
+              <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="#D4D4D4" />
               <Controls showInteractive={false} />
               {showMinimap && (
                 <MiniMap
                   nodeColor={node => {
                     const d = node.data as unknown as PipelineNodeData;
                     const colors: Record<string, string> = {
-                      data: '#3b82f6', transform: '#06b6d4', train: '#8b5cf6',
-                      evaluate: '#f59e0b', deploy: '#10b981', custom: '#6b7280',
+                      data: '#2563EB', transform: '#0D9488', train: '#7C3AED',
+                      evaluate: '#D97706', deploy: '#059669', custom: '#6B6B6B',
                     };
-                    return colors[d?.category] || '#6b7280';
+                    return colors[d?.category] || '#6B6B6B';
                   }}
-                  maskColor="rgba(10,15,30,0.7)"
+                  maskColor="rgba(249,249,249,0.8)"
                   style={{ bottom: 16, right: 16 }}
                 />
               )}
             </ReactFlow>
 
             {nodes.length === 0 && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <div className="text-center space-y-3">
-                  <div className="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/20
-                    flex items-center justify-center mx-auto">
-                    <Plus size={24} className="text-cyan-500/60" />
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 4, background: '#F4F4F4', border: '1px solid #E5E5E5', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+                    <span style={{ fontSize: 20, color: '#A3A3A3' }}>+</span>
                   </div>
-                  <p className="text-sm font-mono text-slate-500">Drag nodes from the left panel</p>
-                  <p className="text-xs text-slate-700">or load a template to get started</p>
+                  <p style={{ fontSize: 13, color: '#6B6B6B' }}>Drag nodes from the left panel</p>
+                  <p style={{ fontSize: 12, color: '#A3A3A3', marginTop: 4 }}>or load a template to get started</p>
                 </div>
               </div>
             )}
 
             {nodes.length > 0 && (
-              <div className="absolute top-3 right-3 flex items-center gap-2 pointer-events-none">
-                <div className="flex items-center gap-1.5 px-2 py-1 rounded
-                  bg-[#0d1220]/90 border border-white/8 text-xs font-mono">
-                  <span className="text-slate-500">{nodes.length} nodes · {edges.length} edges</span>
-                  {successCount > 0 && <span className="text-emerald-400 ml-1">{successCount} ✓</span>}
-                  {errorCount > 0 && <span className="text-red-400 ml-1">{errorCount} ✗</span>}
+              <div style={{ position: 'absolute', top: 12, right: 12, pointerEvents: 'none' }}>
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: '4px 10px', borderRadius: 3,
+                  background: '#FFFFFF', border: '1px solid #E5E5E5',
+                  fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: '#6B6B6B',
+                }}>
+                  {nodes.length} nodes · {edges.length} edges
+                  {successCount > 0 && <span style={{ color: '#059669', marginLeft: 4 }}>{successCount} ✓</span>}
+                  {errorCount > 0 && <span style={{ color: '#DC2626', marginLeft: 4 }}>{errorCount} ✗</span>}
                 </div>
               </div>
             )}
@@ -657,10 +594,13 @@ spec:
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 4 }}
                   onClick={deleteSelected}
-                  className="absolute bottom-4 left-1/2 -translate-x-1/2
-                    flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-mono
-                    bg-red-500/15 text-red-400 border border-red-500/30
-                    hover:bg-red-500/25 transition-all"
+                  style={{
+                    position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)',
+                    display: 'inline-flex', alignItems: 'center', gap: 5,
+                    padding: '6px 12px', borderRadius: 3, fontSize: 12,
+                    background: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA',
+                    cursor: 'pointer', fontFamily: "'Inter', sans-serif",
+                  }}
                 >
                   <Trash2 size={11} />
                   Delete selected (Del)
@@ -670,31 +610,40 @@ spec:
           </div>
 
           {/* Bottom Panel Toggle Bar */}
-          <div className="flex-shrink-0 flex items-center gap-1 px-3 h-8
-            bg-[#0d1220] border-t border-white/8">
+          <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 4, padding: '0 12px', height: 36, background: '#FFFFFF', borderTop: '1px solid #E5E5E5' }}>
             <button
               onClick={() => setActivePanel(p => p === 'logs' ? null : 'logs')}
-              className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded text-xs font-mono transition-all
-                ${activePanel === 'logs' ? 'text-cyan-400 bg-cyan-500/10' : 'text-slate-500 hover:text-slate-300'}`}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 5,
+                padding: '3px 8px', borderRadius: 3, fontSize: 12, cursor: 'pointer',
+                background: activePanel === 'logs' ? '#F4F4F4' : 'transparent',
+                color: activePanel === 'logs' ? '#0A0A0A' : '#6B6B6B',
+                border: 'none', fontFamily: "'Inter', sans-serif",
+              }}
             >
               <Terminal size={11} />
               Execution Logs
               {logs.filter(l => l.level === 'error').length > 0 && (
-                <span className="px-1 rounded-full bg-red-500/20 text-red-400 text-[10px]">
+                <span style={{ padding: '0 5px', borderRadius: 10, background: '#FEF2F2', color: '#DC2626', fontSize: 10, fontWeight: 600 }}>
                   {logs.filter(l => l.level === 'error').length}
                 </span>
               )}
             </button>
             <button
               onClick={() => setActivePanel(p => p === 'observability' ? null : 'observability')}
-              className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded text-xs font-mono transition-all
-                ${activePanel === 'observability' ? 'text-cyan-400 bg-cyan-500/10' : 'text-slate-500 hover:text-slate-300'}`}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 5,
+                padding: '3px 8px', borderRadius: 3, fontSize: 12, cursor: 'pointer',
+                background: activePanel === 'observability' ? '#F4F4F4' : 'transparent',
+                color: activePanel === 'observability' ? '#0A0A0A' : '#6B6B6B',
+                border: 'none', fontFamily: "'Inter', sans-serif",
+              }}
             >
               <Activity size={11} />
               Observability
             </button>
-            <div className="flex-1" />
-            <span className="text-[10px] font-mono text-slate-700">Prometheus · Grafana · Evidently</span>
+            <div style={{ flex: 1 }} />
+            <span style={{ fontSize: 10, color: '#A3A3A3', fontFamily: "'JetBrains Mono', monospace" }}>Prometheus · Grafana · Evidently</span>
           </div>
 
           {/* Bottom Panel Content */}
@@ -705,7 +654,7 @@ spec:
                 animate={{ height: activePanel === 'logs' ? 200 : 240, opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
                 transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
-                className="flex-shrink-0 overflow-hidden border-t border-white/8"
+                style={{ flexShrink: 0, overflow: 'hidden', borderTop: '1px solid #E5E5E5' }}
               >
                 {activePanel === 'logs' && (
                   <ExecutionLog
@@ -731,7 +680,7 @@ spec:
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 16 }}
               transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
-              className="flex-shrink-0"
+              style={{ flexShrink: 0 }}
             >
               <NodeConfigPanel
                 node={selectedNode}

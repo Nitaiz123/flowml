@@ -66,12 +66,12 @@ export interface PipelineTemplate {
 // ─── Category metadata ────────────────────────────────────────────────────────
 
 export const NODE_CATEGORIES: Record<NodeCategory, { label: string; color: string; description: string }> = {
-  data: { label: 'Data', color: '#3b82f6', description: 'Load and ingest data from various sources' },
-  transform: { label: 'Transform', color: '#06b6d4', description: 'Preprocess, clean, and engineer features' },
-  train: { label: 'Train', color: '#8b5cf6', description: 'Train machine learning models' },
-  evaluate: { label: 'Evaluate', color: '#f59e0b', description: 'Measure model performance' },
-  deploy: { label: 'Deploy', color: '#10b981', description: 'Package and deploy trained models' },
-  custom: { label: 'Custom', color: '#6b7280', description: 'Custom scripts and utilities' },
+  data: { label: 'Data', color: '#2563EB', description: 'Load and ingest data from various sources' },
+  transform: { label: 'Transform', color: '#0D9488', description: 'Preprocess, clean, and engineer features' },
+  train: { label: 'Train', color: '#7C3AED', description: 'Train machine learning models' },
+  evaluate: { label: 'Evaluate', color: '#D97706', description: 'Measure model performance' },
+  deploy: { label: 'Deploy', color: '#059669', description: 'Package and deploy trained models' },
+  custom: { label: 'Custom', color: '#6B6B6B', description: 'Custom scripts and utilities' },
 };
 
 // ─── Node Templates ───────────────────────────────────────────────────────────

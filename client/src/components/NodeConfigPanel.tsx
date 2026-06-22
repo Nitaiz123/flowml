@@ -1,6 +1,6 @@
 /**
  * NodeConfigPanel — Right sidebar for configuring selected nodes
- * Blueprint Engineering Theme
+ * Editorial Precision Theme: white, black, category color accents
  */
 
 import { X, Settings2, Info } from 'lucide-react';
@@ -22,10 +22,8 @@ export default function NodeConfigPanel({ node, onClose, onUpdateConfig }: NodeC
   if (!node) return null;
 
   const nodeData = node.data as unknown as PipelineNodeData;
-  const template = NODE_TEMPLATES.find(t => t.type === (node.type === 'pipelineNode' ? nodeData.label.toLowerCase().replace(/\s+/g, '_') : node.id));
   const catInfo = NODE_CATEGORIES[nodeData.category];
 
-  // Find template by matching label
   const matchedTemplate = NODE_TEMPLATES.find(t => t.label === nodeData.label);
   const schema = matchedTemplate?.configSchema || [];
   const config = nodeData.config || {};
@@ -35,121 +33,133 @@ export default function NodeConfigPanel({ node, onClose, onUpdateConfig }: NodeC
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#0e1420] border-l border-white/8 w-72">
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#FFFFFF', borderLeft: '1px solid #E5E5E5', width: 272, flexShrink: 0 }}>
       {/* Header */}
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-white/8">
-        <Settings2 size={14} className="text-slate-500" />
-        <h2 className="flex-1 text-xs font-semibold text-slate-300 font-mono truncate">
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderBottom: '1px solid #E5E5E5' }}>
+        <Settings2 size={13} color="#6B6B6B" />
+        <h2 style={{ flex: 1, fontSize: 12, fontWeight: 600, color: '#0A0A0A', fontFamily: "'JetBrains Mono', monospace", overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {nodeData.label}
         </h2>
         <button
           onClick={onClose}
-          className="p-1 rounded hover:bg-white/10 text-slate-500 hover:text-slate-300 transition-colors"
+          style={{ padding: 4, borderRadius: 3, background: 'transparent', border: 'none', cursor: 'pointer', color: '#6B6B6B', display: 'flex', alignItems: 'center' }}
+          onMouseEnter={e => (e.currentTarget.style.background = '#F4F4F4')}
+          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
         >
           <X size={13} />
         </button>
       </div>
 
       {/* Category badge */}
-      <div className="px-4 py-2 border-b border-white/5">
-        <span
-          className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono font-medium"
-          style={{ backgroundColor: catInfo.color + '22', color: catInfo.color, border: `1px solid ${catInfo.color}44` }}
-        >
-          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: catInfo.color }} />
+      <div style={{ padding: '8px 12px', borderBottom: '1px solid #F4F4F4' }}>
+        <span style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 5,
+          padding: '2px 8px',
+          borderRadius: 3,
+          fontSize: 10,
+          fontWeight: 700,
+          letterSpacing: '0.06em',
+          textTransform: 'uppercase',
+          fontFamily: "'JetBrains Mono', monospace",
+          background: catInfo.color + '14',
+          color: catInfo.color,
+          border: `1px solid ${catInfo.color}30`,
+        }}>
+          <span style={{ width: 5, height: 5, borderRadius: '50%', background: catInfo.color, display: 'inline-block' }} />
           {catInfo.label}
         </span>
         {matchedTemplate && (
-          <p className="mt-1.5 text-[10px] text-slate-600 leading-relaxed">{matchedTemplate.description}</p>
+          <p style={{ marginTop: 6, fontSize: 11, color: '#6B6B6B', lineHeight: 1.5 }}>{matchedTemplate.description}</p>
         )}
       </div>
 
       {/* Config fields */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
+      <div style={{ flex: 1, overflowY: 'auto', padding: '12px' }}>
         {schema.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <Info size={20} className="text-slate-700 mb-2" />
-            <p className="text-xs text-slate-600">No configuration options for this node.</p>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 16px', textAlign: 'center' }}>
+            <Info size={18} color="#D4D4D4" style={{ marginBottom: 8 }} />
+            <p style={{ fontSize: 12, color: '#A3A3A3' }}>No configuration options for this node.</p>
           </div>
         ) : (
-          schema.map(field => (
-            <div key={field.key} className="space-y-1.5">
-              <Label className="text-[11px] text-slate-400 font-mono">{field.label}</Label>
-              {field.description && (
-                <p className="text-[10px] text-slate-600">{field.description}</p>
-              )}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {schema.map(field => (
+              <div key={field.key}>
+                <Label style={{ fontSize: 11, fontWeight: 600, color: '#0A0A0A', fontFamily: "'JetBrains Mono', monospace", display: 'block', marginBottom: 4 }}>{field.label}</Label>
+                {field.description && (
+                  <p style={{ fontSize: 10, color: '#6B6B6B', marginBottom: 6 }}>{field.description}</p>
+                )}
 
-              {field.type === 'text' && (
-                <Input
-                  value={String(config[field.key] ?? field.defaultValue ?? '')}
-                  onChange={e => handleChange(field.key, e.target.value)}
-                  placeholder={field.placeholder}
-                  className="h-7 text-xs bg-white/5 border-white/10 text-slate-300 placeholder:text-slate-600
-                    focus:border-cyan-500/50 font-mono"
-                />
-              )}
-
-              {field.type === 'number' && (
-                <Input
-                  type="number"
-                  value={String(config[field.key] ?? field.defaultValue ?? 0)}
-                  onChange={e => handleChange(field.key, parseFloat(e.target.value) || 0)}
-                  className="h-7 text-xs bg-white/5 border-white/10 text-slate-300
-                    focus:border-cyan-500/50 font-mono"
-                />
-              )}
-
-              {field.type === 'textarea' && (
-                <Textarea
-                  value={String(config[field.key] ?? field.defaultValue ?? '')}
-                  onChange={e => handleChange(field.key, e.target.value)}
-                  placeholder={field.placeholder}
-                  rows={4}
-                  className="text-xs bg-white/5 border-white/10 text-slate-300 placeholder:text-slate-600
-                    focus:border-cyan-500/50 font-mono resize-none"
-                />
-              )}
-
-              {field.type === 'select' && field.options && (
-                <Select
-                  value={String(config[field.key] ?? field.defaultValue ?? field.options[0])}
-                  onValueChange={val => handleChange(field.key, val)}
-                >
-                  <SelectTrigger className="h-7 text-xs bg-white/5 border-white/10 text-slate-300
-                    focus:border-cyan-500/50 font-mono">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#0e1420] border-white/10">
-                    {field.options.map(opt => (
-                      <SelectItem key={opt} value={opt} className="text-xs text-slate-300 font-mono
-                        hover:bg-white/10 focus:bg-white/10">
-                        {opt}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-
-              {field.type === 'boolean' && (
-                <div className="flex items-center gap-2">
-                  <Switch
-                    checked={Boolean(config[field.key] ?? field.defaultValue ?? false)}
-                    onCheckedChange={val => handleChange(field.key, val)}
-                    className="data-[state=checked]:bg-cyan-500"
+                {field.type === 'text' && (
+                  <Input
+                    value={String(config[field.key] ?? field.defaultValue ?? '')}
+                    onChange={e => handleChange(field.key, e.target.value)}
+                    placeholder={field.placeholder}
+                    className="h-7 text-xs font-mono"
+                    style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", background: '#F9F9F9', borderColor: '#E5E5E5' }}
                   />
-                  <span className="text-[11px] text-slate-500 font-mono">
-                    {Boolean(config[field.key] ?? field.defaultValue) ? 'Enabled' : 'Disabled'}
-                  </span>
-                </div>
-              )}
-            </div>
-          ))
+                )}
+
+                {field.type === 'number' && (
+                  <Input
+                    type="number"
+                    value={String(config[field.key] ?? field.defaultValue ?? 0)}
+                    onChange={e => handleChange(field.key, parseFloat(e.target.value) || 0)}
+                    className="h-7 text-xs font-mono"
+                    style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", background: '#F9F9F9', borderColor: '#E5E5E5' }}
+                  />
+                )}
+
+                {field.type === 'textarea' && (
+                  <Textarea
+                    value={String(config[field.key] ?? field.defaultValue ?? '')}
+                    onChange={e => handleChange(field.key, e.target.value)}
+                    placeholder={field.placeholder}
+                    rows={4}
+                    className="text-xs font-mono resize-none"
+                    style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", background: '#F9F9F9', borderColor: '#E5E5E5' }}
+                  />
+                )}
+
+                {field.type === 'select' && field.options && (
+                  <Select
+                    value={String(config[field.key] ?? field.defaultValue ?? field.options[0])}
+                    onValueChange={val => handleChange(field.key, val)}
+                  >
+                    <SelectTrigger className="h-7 text-xs font-mono" style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", background: '#F9F9F9', borderColor: '#E5E5E5' }}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent style={{ background: '#FFFFFF', border: '1px solid #E5E5E5' }}>
+                      {field.options.map(opt => (
+                        <SelectItem key={opt} value={opt} className="text-xs font-mono" style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace" }}>
+                          {opt}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+
+                {field.type === 'boolean' && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Switch
+                      checked={Boolean(config[field.key] ?? field.defaultValue ?? false)}
+                      onCheckedChange={val => handleChange(field.key, val)}
+                    />
+                    <span style={{ fontSize: 11, color: '#6B6B6B', fontFamily: "'JetBrains Mono', monospace" }}>
+                      {Boolean(config[field.key] ?? field.defaultValue) ? 'Enabled' : 'Disabled'}
+                    </span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
       {/* Node ID footer */}
-      <div className="px-4 py-2 border-t border-white/8">
-        <p className="text-[10px] text-slate-700 font-mono">ID: {node.id}</p>
+      <div style={{ padding: '8px 12px', borderTop: '1px solid #E5E5E5' }}>
+        <p style={{ fontSize: 10, color: '#A3A3A3', fontFamily: "'JetBrains Mono', monospace" }}>ID: {node.id}</p>
       </div>
     </div>
   );

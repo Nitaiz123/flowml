@@ -1,9 +1,9 @@
 /**
  * ObservabilityPanel — Live metrics, latency, throughput, drift detection
- * Blueprint Engineering Theme
+ * Editorial Precision Theme: white, black, minimal
  */
 import { useState, useEffect, useRef } from 'react';
-import { Activity, Cpu, MemoryStick, Zap, AlertTriangle, TrendingUp, TrendingDown } from 'lucide-react';
+import { Activity, AlertTriangle, TrendingUp, TrendingDown } from 'lucide-react';
 import type { Node } from '@xyflow/react';
 import type { PipelineNodeData } from '@/lib/pipelineStore';
 
@@ -26,8 +26,8 @@ function Sparkline({ data, color }: { data: number[]; color: string }) {
   const max = Math.max(...data);
   const min = Math.min(...data);
   const range = max - min || 1;
-  const w = 80;
-  const h = 24;
+  const w = 72;
+  const h = 20;
   const pts = data.map((v, i) => {
     const x = (i / (data.length - 1)) * w;
     const y = h - ((v - min) / range) * h;
@@ -35,7 +35,7 @@ function Sparkline({ data, color }: { data: number[]; color: string }) {
   }).join(' ');
 
   return (
-    <svg width={w} height={h} className="opacity-70">
+    <svg width={w} height={h} style={{ opacity: 0.8 }}>
       <polyline
         points={pts}
         fill="none"
@@ -48,14 +48,21 @@ function Sparkline({ data, color }: { data: number[]; color: string }) {
   );
 }
 
+const STATUS_STYLES: Record<string, { bg: string; color: string; border: string }> = {
+  idle: { bg: '#F4F4F4', color: '#6B6B6B', border: '#E5E5E5' },
+  running: { bg: '#FFF7ED', color: '#C2410C', border: '#FED7AA' },
+  success: { bg: '#F0FDF4', color: '#15803D', border: '#BBF7D0' },
+  error: { bg: '#FEF2F2', color: '#DC2626', border: '#FECACA' },
+};
+
 export default function ObservabilityPanel({ nodes, runState }: Props) {
   const [metrics, setMetrics] = useState<Metric[]>([
-    { label: 'Throughput', value: '0', unit: 'req/s', trend: 'stable', color: '#00d4ff', sparkline: [] },
-    { label: 'P99 Latency', value: '0', unit: 'ms', trend: 'stable', color: '#8b5cf6', sparkline: [] },
-    { label: 'CPU Usage', value: '0', unit: '%', trend: 'stable', color: '#f59e0b', sparkline: [] },
-    { label: 'Memory', value: '0', unit: 'MB', trend: 'stable', color: '#10b981', sparkline: [] },
-    { label: 'Error Rate', value: '0.00', unit: '%', trend: 'stable', color: '#ef4444', sparkline: [] },
-    { label: 'Data Drift', value: '0.00', unit: 'score', trend: 'stable', color: '#f97316', sparkline: [] },
+    { label: 'Throughput', value: '0', unit: 'req/s', trend: 'stable', color: '#2563EB', sparkline: [] },
+    { label: 'P99 Latency', value: '0', unit: 'ms', trend: 'stable', color: '#7C3AED', sparkline: [] },
+    { label: 'CPU Usage', value: '0', unit: '%', trend: 'stable', color: '#D97706', sparkline: [] },
+    { label: 'Memory', value: '0', unit: 'MB', trend: 'stable', color: '#0D9488', sparkline: [] },
+    { label: 'Error Rate', value: '0.00', unit: '%', trend: 'stable', color: '#DC2626', sparkline: [] },
+    { label: 'Data Drift', value: '0.00', unit: 'score', trend: 'stable', color: '#E8000D', sparkline: [] },
   ]);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -69,38 +76,17 @@ export default function ObservabilityPanel({ nodes, runState }: Props) {
           let trend: 'up' | 'down' | 'stable' = 'stable';
 
           switch (m.label) {
-            case 'Throughput':
-              newVal = 120 + Math.random() * 80;
-              trend = newVal > 160 ? 'up' : 'down';
-              break;
-            case 'P99 Latency':
-              newVal = 45 + Math.random() * 30;
-              trend = newVal > 60 ? 'up' : 'down';
-              break;
-            case 'CPU Usage':
-              newVal = 35 + Math.random() * 45;
-              trend = newVal > 60 ? 'up' : 'down';
-              break;
-            case 'Memory':
-              newVal = 512 + Math.random() * 512;
-              trend = 'up';
-              break;
-            case 'Error Rate':
-              newVal = Math.random() * 0.5;
-              trend = newVal > 0.3 ? 'up' : 'stable';
-              break;
-            case 'Data Drift':
-              newVal = Math.random() * 0.15;
-              trend = newVal > 0.1 ? 'up' : 'stable';
-              break;
-            default:
-              newVal = 0;
+            case 'Throughput': newVal = 120 + Math.random() * 80; trend = newVal > 160 ? 'up' : 'down'; break;
+            case 'P99 Latency': newVal = 45 + Math.random() * 30; trend = newVal > 60 ? 'up' : 'down'; break;
+            case 'CPU Usage': newVal = 35 + Math.random() * 45; trend = newVal > 60 ? 'up' : 'down'; break;
+            case 'Memory': newVal = 512 + Math.random() * 512; trend = 'up'; break;
+            case 'Error Rate': newVal = Math.random() * 0.5; trend = newVal > 0.3 ? 'up' : 'stable'; break;
+            case 'Data Drift': newVal = Math.random() * 0.15; trend = newVal > 0.1 ? 'up' : 'stable'; break;
+            default: newVal = 0;
           }
 
           const sparkline = [...m.sparkline.slice(-19), newVal];
-          const displayVal = m.label === 'Memory'
-            ? newVal.toFixed(0)
-            : m.label === 'Throughput'
+          const displayVal = m.label === 'Memory' || m.label === 'Throughput'
             ? newVal.toFixed(0)
             : newVal.toFixed(2);
 
@@ -110,56 +96,54 @@ export default function ObservabilityPanel({ nodes, runState }: Props) {
     } else {
       if (intervalRef.current) clearInterval(intervalRef.current);
     }
-
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [isRunning]);
 
   const successNodes = nodes.filter(n => (n.data as unknown as PipelineNodeData).status === 'success').length;
   const errorNodes = nodes.filter(n => (n.data as unknown as PipelineNodeData).status === 'error').length;
 
   return (
-    <div className="h-full flex flex-col bg-[#0a0f1e] overflow-hidden">
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#FFFFFF', overflow: 'hidden' }}>
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-2 border-b border-white/8">
-        <Activity size={12} className="text-cyan-400" />
-        <span className="text-xs font-mono text-slate-400">Observability</span>
-        <span className={`flex items-center gap-1 text-[10px] font-mono px-1.5 py-0.5 rounded
-          ${isRunning
-            ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30'
-            : 'bg-white/5 text-slate-600 border border-white/8'
-          }`}>
-          <span className={`w-1.5 h-1.5 rounded-full ${isRunning ? 'bg-cyan-400 animate-pulse' : 'bg-slate-600'}`} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 36, borderBottom: '1px solid #F4F4F4', flexShrink: 0 }}>
+        <Activity size={12} color="#E8000D" />
+        <span style={{ fontSize: 11, fontWeight: 700, color: '#0A0A0A', fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.06em', textTransform: 'uppercase' }}>Observability</span>
+        <span style={{
+          display: 'inline-flex', alignItems: 'center', gap: 4,
+          fontSize: 10, fontFamily: "'JetBrains Mono', monospace",
+          padding: '1px 6px', borderRadius: 3,
+          background: isRunning ? '#FFF7ED' : '#F4F4F4',
+          color: isRunning ? '#C2410C' : '#6B6B6B',
+          border: `1px solid ${isRunning ? '#FED7AA' : '#E5E5E5'}`,
+        }}>
+          <span style={{ width: 5, height: 5, borderRadius: '50%', background: isRunning ? '#F97316' : '#A3A3A3', display: 'inline-block' }} />
           {isRunning ? 'LIVE' : 'IDLE'}
         </span>
-        <div className="flex-1" />
-        <span className="text-[10px] font-mono text-slate-600">
-          Prometheus · Grafana · Evidently
-        </span>
+        <div style={{ flex: 1 }} />
+        <span style={{ fontSize: 10, color: '#A3A3A3', fontFamily: "'JetBrains Mono', monospace" }}>Prometheus · Grafana · Evidently</span>
       </div>
 
       {/* Metrics Grid */}
-      <div className="flex-1 overflow-auto">
-        <div className="grid grid-cols-6 gap-px bg-white/5 border-b border-white/8">
-          {metrics.map(m => (
-            <div key={m.label} className="bg-[#0a0f1e] px-3 py-2">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] font-mono text-slate-500">{m.label}</span>
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', borderBottom: '1px solid #F4F4F4' }}>
+          {metrics.map((m, i) => (
+            <div key={m.label} style={{ padding: '8px 12px', borderRight: i < 5 ? '1px solid #F4F4F4' : 'none' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: '#6B6B6B' }}>{m.label}</span>
                 {m.trend === 'up' && m.label !== 'Throughput' ? (
-                  <TrendingUp size={9} className="text-red-400" />
+                  <TrendingUp size={9} color="#DC2626" />
                 ) : m.trend === 'down' ? (
-                  <TrendingDown size={9} className="text-emerald-400" />
+                  <TrendingDown size={9} color="#059669" />
                 ) : null}
               </div>
-              <div className="flex items-end gap-2">
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
                 <div>
-                  <span className="text-base font-mono font-bold" style={{ color: m.color }}>
+                  <span style={{ fontSize: 15, fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: isRunning ? m.color : '#A3A3A3' }}>
                     {isRunning ? m.value : '—'}
                   </span>
-                  <span className="text-[10px] font-mono text-slate-600 ml-1">{m.unit}</span>
+                  <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: '#A3A3A3', marginLeft: 3 }}>{m.unit}</span>
                 </div>
-                <div className="mb-0.5">
+                <div style={{ marginBottom: 2 }}>
                   <Sparkline data={m.sparkline} color={m.color} />
                 </div>
               </div>
@@ -167,36 +151,28 @@ export default function ObservabilityPanel({ nodes, runState }: Props) {
           ))}
         </div>
 
-        {/* Node Status Table */}
-        <div className="px-4 py-2">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Step Status</span>
-            <div className="flex-1 h-px bg-white/5" />
-            {successNodes > 0 && (
-              <span className="text-[10px] font-mono text-emerald-400">{successNodes} passed</span>
-            )}
-            {errorNodes > 0 && (
-              <span className="text-[10px] font-mono text-red-400 ml-2">{errorNodes} failed</span>
-            )}
+        {/* Node Status */}
+        <div style={{ padding: '8px 12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+            <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#6B6B6B' }}>Step Status</span>
+            <div style={{ flex: 1, height: 1, background: '#F4F4F4' }} />
+            {successNodes > 0 && <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: '#059669' }}>{successNodes} passed</span>}
+            {errorNodes > 0 && <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: '#DC2626', marginLeft: 8 }}>{errorNodes} failed</span>}
           </div>
-          <div className="flex items-center gap-1.5 flex-wrap">
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
             {nodes.map(n => {
               const d = n.data as unknown as PipelineNodeData;
-              const colors: Record<string, string> = {
-                idle: 'bg-white/10 text-slate-500',
-                running: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40',
-                success: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40',
-                error: 'bg-red-500/20 text-red-400 border-red-500/40',
-              };
+              const s = STATUS_STYLES[d.status] || STATUS_STYLES.idle;
               return (
-                <span
-                  key={n.id}
-                  className={`px-2 py-0.5 rounded text-[10px] font-mono border border-transparent
-                    ${colors[d.status] || colors.idle}`}
-                >
-                  {d.status === 'running' && <span className="inline-block w-1 h-1 rounded-full bg-cyan-400 animate-pulse mr-1" />}
+                <span key={n.id} style={{
+                  padding: '2px 8px', borderRadius: 3, fontSize: 10,
+                  fontFamily: "'JetBrains Mono', monospace",
+                  background: s.bg, color: s.color, border: `1px solid ${s.border}`,
+                  display: 'inline-flex', alignItems: 'center', gap: 4,
+                }}>
+                  {d.status === 'running' && <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#F97316', display: 'inline-block' }} />}
                   {d.label}
-                  {d.duration && <span className="text-slate-600 ml-1">({d.duration})</span>}
+                  {d.duration && <span style={{ color: '#A3A3A3', marginLeft: 2 }}>({d.duration})</span>}
                 </span>
               );
             })}
@@ -205,8 +181,13 @@ export default function ObservabilityPanel({ nodes, runState }: Props) {
 
         {/* Drift Alert */}
         {isRunning && metrics[5].sparkline.length > 5 && parseFloat(metrics[5].value) > 0.1 && (
-          <div className="mx-4 mb-2 flex items-center gap-2 px-3 py-2 rounded
-            bg-orange-500/10 border border-orange-500/30 text-xs font-mono text-orange-400">
+          <div style={{
+            margin: '0 12px 8px',
+            display: 'flex', alignItems: 'center', gap: 8,
+            padding: '6px 10px', borderRadius: 3,
+            background: '#FFF7ED', border: '1px solid #FED7AA',
+            fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: '#C2410C',
+          }}>
             <AlertTriangle size={11} />
             Data drift detected (score: {metrics[5].value}) — consider retraining
           </div>

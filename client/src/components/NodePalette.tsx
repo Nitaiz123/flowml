@@ -1,6 +1,6 @@
 /**
  * NodePalette — Left sidebar with draggable node templates
- * Blueprint Engineering Theme
+ * Editorial Precision Theme: white, black, category color accents
  */
 
 import { useState } from 'react';
@@ -10,9 +10,8 @@ import {
   Type, Wrench, ChevronDown, ChevronRight, Search
 } from 'lucide-react';
 import { NODE_TEMPLATES, NODE_CATEGORIES, type NodeCategory, type NodeTemplate } from '@/lib/pipelineStore';
-import { Input } from '@/components/ui/input';
 
-const ICONS: Record<string, React.ComponentType<{ size?: number; className?: string; style?: React.CSSProperties }>> = {
+const ICONS: Record<string, React.ComponentType<{ size?: number; color?: string }>> = {
   FileSpreadsheet, Database, Globe, Cloud, Wrench, Scissors, Type,
   BrainCircuit, Cpu, SlidersHorizontal, BarChart3, Grid3x3,
   Archive, Rocket, Box, Code2,
@@ -32,19 +31,41 @@ function NodePaletteItem({ template, onDragStart }: { template: NodeTemplate; on
     <div
       draggable
       onDragStart={(e) => onDragStart(e, template.type)}
-      className="group flex items-center gap-2.5 px-2.5 py-2 rounded-md cursor-grab active:cursor-grabbing
-        hover:bg-white/5 border border-transparent hover:border-white/10 transition-all duration-150"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        padding: '7px 10px',
+        cursor: 'grab',
+        borderRadius: 3,
+        border: '1px solid transparent',
+        transition: 'background 120ms, border-color 120ms',
+      }}
+      onMouseEnter={e => {
+        (e.currentTarget as HTMLDivElement).style.background = '#F9F9F9';
+        (e.currentTarget as HTMLDivElement).style.borderColor = '#E5E5E5';
+      }}
+      onMouseLeave={e => {
+        (e.currentTarget as HTMLDivElement).style.background = 'transparent';
+        (e.currentTarget as HTMLDivElement).style.borderColor = 'transparent';
+      }}
     >
-      <div
-        className="flex items-center justify-center w-7 h-7 rounded-md flex-shrink-0 transition-all duration-150
-          group-hover:scale-110"
-        style={{ backgroundColor: catInfo.color + '22', border: `1px solid ${catInfo.color}44` }}
-      >
-        <IconComponent size={13} className="opacity-90" style={{ color: catInfo.color } as React.CSSProperties} />
+      <div style={{
+        width: 26,
+        height: 26,
+        borderRadius: 3,
+        background: catInfo.color + '14',
+        border: `1px solid ${catInfo.color}30`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
+      }}>
+        <IconComponent size={13} color={catInfo.color} />
       </div>
-      <div className="flex-1 min-w-0">
-        <div className="text-xs font-medium text-slate-300 truncate font-mono">{template.label}</div>
-        <div className="text-[10px] text-slate-600 truncate">{template.description}</div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 12, fontWeight: 500, color: '#0A0A0A', fontFamily: "'JetBrains Mono', monospace", overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{template.label}</div>
+        <div style={{ fontSize: 10, color: '#A3A3A3', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 1 }}>{template.description}</div>
       </div>
     </div>
   );
@@ -81,50 +102,73 @@ export default function NodePalette({ onDragStart }: NodePaletteProps = {}) {
   }, {} as Record<NodeCategory, NodeTemplate[]>);
 
   return (
-    <div className="flex flex-col h-full bg-[#0e1420] border-r border-white/8">
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#FFFFFF', borderRight: '1px solid #E5E5E5', width: 240, flexShrink: 0 }}>
       {/* Header */}
-      <div className="px-4 py-3 border-b border-white/8">
-        <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest font-mono mb-2.5">Node Palette</h2>
-        <div className="relative">
-          <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-600" />
-          <Input
+      <div style={{ padding: '12px 12px 10px', borderBottom: '1px solid #E5E5E5' }}>
+        <h2 style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#6B6B6B', marginBottom: 8 }}>NODE PALETTE</h2>
+        <div style={{ position: 'relative' }}>
+          <Search size={12} color="#A3A3A3" style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)' }} />
+          <input
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search nodes..."
-            className="pl-7 h-7 text-xs bg-white/5 border-white/10 text-slate-300 placeholder:text-slate-600
-              focus:border-cyan-500/50 focus:ring-0 font-mono"
+            style={{
+              width: '100%',
+              height: 30,
+              paddingLeft: 28,
+              paddingRight: 8,
+              fontSize: 12,
+              fontFamily: "'JetBrains Mono', monospace",
+              background: '#F9F9F9',
+              border: '1px solid #E5E5E5',
+              borderRadius: 3,
+              color: '#0A0A0A',
+              outline: 'none',
+              boxSizing: 'border-box',
+            }}
           />
         </div>
       </div>
 
       {/* Node list */}
-      <div className="flex-1 overflow-y-auto py-2 px-2">
+      <div style={{ flex: 1, overflowY: 'auto', padding: '6px 8px' }}>
         {Object.entries(grouped).map(([cat, templates]) => {
           const category = cat as NodeCategory;
           const catInfo = NODE_CATEGORIES[category];
           const isCollapsed = collapsed.has(category);
 
           return (
-            <div key={category} className="mb-1">
+            <div key={category} style={{ marginBottom: 4 }}>
               <button
                 onClick={() => toggleCategory(category)}
-                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-white/5
-                  transition-colors duration-150 group"
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '5px 8px',
+                  borderRadius: 3,
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'background 120ms',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#F9F9F9')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
-                <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: catInfo.color }} />
-                <span className="flex-1 text-left text-[11px] font-semibold uppercase tracking-wider font-mono"
-                  style={{ color: catInfo.color }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: catInfo.color, flexShrink: 0, display: 'inline-block' }} />
+                <span style={{ flex: 1, textAlign: 'left', fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: catInfo.color, fontFamily: "'JetBrains Mono', monospace" }}>
                   {catInfo.label}
                 </span>
-                <span className="text-[10px] text-slate-600 font-mono">{templates.length}</span>
+                <span style={{ fontSize: 10, color: '#A3A3A3', fontFamily: "'JetBrains Mono', monospace" }}>{templates.length}</span>
                 {isCollapsed
-                  ? <ChevronRight size={11} className="text-slate-600" />
-                  : <ChevronDown size={11} className="text-slate-600" />
+                  ? <ChevronRight size={11} color="#A3A3A3" />
+                  : <ChevronDown size={11} color="#A3A3A3" />
                 }
               </button>
 
               {!isCollapsed && (
-                <div className="mt-0.5 space-y-0.5">
+                <div style={{ marginTop: 2 }}>
                   {templates.map(template => (
                     <NodePaletteItem
                       key={template.type}
@@ -139,16 +183,16 @@ export default function NodePalette({ onDragStart }: NodePaletteProps = {}) {
         })}
 
         {Object.keys(grouped).length === 0 && (
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <Search size={20} className="text-slate-700 mb-2" />
-            <p className="text-xs text-slate-600">No nodes match "{search}"</p>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 16px', textAlign: 'center' }}>
+            <Search size={18} color="#D4D4D4" style={{ marginBottom: 8 }} />
+            <p style={{ fontSize: 12, color: '#A3A3A3' }}>No nodes match "{search}"</p>
           </div>
         )}
       </div>
 
       {/* Footer hint */}
-      <div className="px-4 py-2.5 border-t border-white/8">
-        <p className="text-[10px] text-slate-700 font-mono">Drag nodes onto the canvas to build your pipeline</p>
+      <div style={{ padding: '8px 12px', borderTop: '1px solid #E5E5E5' }}>
+        <p style={{ fontSize: 10, color: '#A3A3A3', fontFamily: "'JetBrains Mono', monospace" }}>Drag nodes onto the canvas to build your pipeline</p>
       </div>
     </div>
   );

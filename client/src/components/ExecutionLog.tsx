@@ -1,6 +1,6 @@
 /**
  * ExecutionLog — Bottom panel showing pipeline execution logs
- * Blueprint Engineering Theme
+ * Editorial Precision Theme: white, black, minimal
  */
 
 import { useRef, useEffect } from 'react';
@@ -15,10 +15,10 @@ interface ExecutionLogProps {
 }
 
 const LOG_COLORS: Record<LogEntry['level'], string> = {
-  info: 'text-slate-400',
-  warn: 'text-amber-400',
-  error: 'text-red-400',
-  success: 'text-emerald-400',
+  info: '#6B6B6B',
+  warn: '#D97706',
+  error: '#DC2626',
+  success: '#059669',
 };
 
 const LOG_PREFIX: Record<LogEntry['level'], string> = {
@@ -57,64 +57,65 @@ export default function ExecutionLog({ logs, isExpanded, onToggle, onClear }: Ex
   };
 
   return (
-    <div
-      className="flex flex-col bg-[#080d18] border-t border-white/8 transition-all duration-250"
-      style={{ height: isExpanded ? 200 : 36 }}
-    >
+    <div style={{ display: 'flex', flexDirection: 'column', background: '#FFFFFF', height: '100%' }}>
       {/* Header bar */}
       <div
-        className="flex items-center gap-2 px-4 h-9 flex-shrink-0 cursor-pointer hover:bg-white/3 transition-colors"
+        style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', height: 36, flexShrink: 0, cursor: 'pointer', borderBottom: '1px solid #F4F4F4' }}
         onClick={onToggle}
       >
-        <Terminal size={12} className="text-cyan-500" />
-        <span className="text-[11px] font-semibold text-slate-400 font-mono uppercase tracking-wider">
+        <Terminal size={12} color="#E8000D" />
+        <span style={{ fontSize: 11, fontWeight: 700, color: '#0A0A0A', fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.06em', textTransform: 'uppercase' }}>
           Execution Log
         </span>
         {logs.length > 0 && (
-          <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-white/8 text-slate-500">
+          <span style={{ padding: '1px 6px', borderRadius: 10, background: '#F4F4F4', fontSize: 10, color: '#6B6B6B', fontFamily: "'JetBrains Mono', monospace" }}>
             {logs.length}
           </span>
         )}
-        <div className="flex-1" />
+        <div style={{ flex: 1 }} />
         {isExpanded && (
           <>
             <button
               onClick={(e) => { e.stopPropagation(); handleDownload(); }}
-              className="p-1 rounded hover:bg-white/10 text-slate-600 hover:text-slate-400 transition-colors"
+              style={{ padding: 4, borderRadius: 3, background: 'transparent', border: 'none', cursor: 'pointer', color: '#A3A3A3', display: 'flex' }}
               title="Download logs"
+              onMouseEnter={e => (e.currentTarget.style.color = '#0A0A0A')}
+              onMouseLeave={e => (e.currentTarget.style.color = '#A3A3A3')}
             >
               <Download size={11} />
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); onClear(); }}
-              className="p-1 rounded hover:bg-white/10 text-slate-600 hover:text-slate-400 transition-colors"
+              style={{ padding: 4, borderRadius: 3, background: 'transparent', border: 'none', cursor: 'pointer', color: '#A3A3A3', display: 'flex' }}
               title="Clear logs"
+              onMouseEnter={e => (e.currentTarget.style.color = '#DC2626')}
+              onMouseLeave={e => (e.currentTarget.style.color = '#A3A3A3')}
             >
               <Trash2 size={11} />
             </button>
           </>
         )}
-        {isExpanded ? <ChevronDown size={12} className="text-slate-600" /> : <ChevronUp size={12} className="text-slate-600" />}
+        {isExpanded ? <ChevronDown size={12} color="#A3A3A3" /> : <ChevronUp size={12} color="#A3A3A3" />}
       </div>
 
       {/* Log content */}
       {isExpanded && (
         <div
           ref={scrollRef}
-          className="flex-1 overflow-y-auto px-4 py-2 space-y-0.5"
+          style={{ flex: 1, overflowY: 'auto', padding: '8px 12px', background: '#FAFAFA' }}
         >
           {logs.length === 0 ? (
-            <div className="flex items-center justify-center h-full">
-              <p className="text-[11px] text-slate-700 font-mono">No logs yet. Run the pipeline to see output.</p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+              <p style={{ fontSize: 11, color: '#A3A3A3', fontFamily: "'JetBrains Mono', monospace" }}>No logs yet. Run the pipeline to see output.</p>
             </div>
           ) : (
             logs.map(log => (
-              <div key={log.id} className="flex items-start gap-3 font-mono text-[11px] leading-relaxed">
-                <span className="text-slate-700 flex-shrink-0 tabular-nums">{formatTime(log.timestamp)}</span>
-                <span className={`flex-shrink-0 font-semibold ${LOG_COLORS[log.level]}`}>
+              <div key={log.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, fontFamily: "'JetBrains Mono', monospace", fontSize: 11, lineHeight: 1.6, marginBottom: 1 }}>
+                <span style={{ color: '#A3A3A3', flexShrink: 0, tabularNums: true } as React.CSSProperties}>{formatTime(log.timestamp)}</span>
+                <span style={{ flexShrink: 0, fontWeight: 700, color: LOG_COLORS[log.level] }}>
                   {LOG_PREFIX[log.level]}
                 </span>
-                <span className={LOG_COLORS[log.level]}>{log.message}</span>
+                <span style={{ color: LOG_COLORS[log.level] }}>{log.message}</span>
               </div>
             ))
           )}
